@@ -1,3 +1,15 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:18:58
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
 import * as vscode from "vscode";
 import { fireIntegrationOverlay } from "./authentication/integrations/overlay";
 import { FireAuthProvider } from "./authentication/provider";
@@ -62,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
             .getSession("Infinisoft", [fireIntegrationOverlay.scope])
             .then((r) => {
               if (r) {
-                fireLogProvider.info(`firecode.dev.getSession(): Got Session`)
+                fireLogProvider.info(`firecode.dev.getSession(): Got Session`);
                 vscode.window.showInformationMessage("Got session!");
               } else {
                 vscode.window.showErrorMessage("No session!");
