@@ -29,8 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage("Hello World from firecode!");
 	  vscode.authentication.getSession('Infinisoft', FireAuthProvider.scopes)
 	  .then(r=> {
-		  console.log(r)
-	  })
+		  console.log(r);
+	  });
     })
   );
 
