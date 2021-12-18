@@ -1,3 +1,16 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:35:09
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
+/* eslint-disable @typescript-eslint/naming-convention */
 export enum LOGLEVEL {
   ERROR,
   WARN,
@@ -43,7 +56,7 @@ export class LogProvider {
   }
 
   debug(message: string) {
-    const error = new Error(message)
+    const error = new Error(message);
     this.log(LOGLEVEL.DEBUG, `[message]: ${error.message} : [Stacktrace] : ${error.stack}`);
   }
 }

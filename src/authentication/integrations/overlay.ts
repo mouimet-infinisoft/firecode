@@ -1,10 +1,24 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:32:59
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
 import fetch from "node-fetch";
 import { v4 } from 'uuid';
 import { FirecodeAccount, FirecodeSession } from "../provider";
 import { IFireIntegration } from "../types";
 
 const config = {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     APIURL: "https://api.overlay-tech.com",
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     ROUTES: {
       login: "api/login",
       projects: "api/projects",
@@ -34,8 +48,9 @@ signIn: async (email: string, password: string) => {
           }
         );
 
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         const { refresh_token, token } =
-          (await response.json())
+          (await response.json());
 
         resolve(new FirecodeSession(
           v4(),
@@ -43,9 +58,9 @@ signIn: async (email: string, password: string) => {
           refresh_token,
           new FirecodeAccount(v4(), email),
           ["overlay"]
-        ))
+        ));
       } catch (error) {
         reject(`AuthenticationError`);
       }
     });
-  }}
+  }};

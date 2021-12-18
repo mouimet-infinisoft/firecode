@@ -1,3 +1,15 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:25:03
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
 import * as vscode from "vscode";
 import { globalContext } from "../extension";
 import { fireSignInCommand } from "./signin/signin.command";
@@ -5,15 +17,15 @@ import { IFireIntegration, IFireSignIn } from "./types";
 
 export class FireAuthProvider implements vscode.AuthenticationProvider {
   private sessions: FirecodeSession[];
-  onDidChangeEmitter:vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> 
-  onDidChangeSessions: vscode.Event<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>
+  onDidChangeEmitter:vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>; 
+  onDidChangeSessions: vscode.Event<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>;
 
   constructor(private integrations:  { [id: string]: IFireSignIn } = {}) {
     this.sessions = [];
-    this.onDidChangeEmitter=  new vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>()
-    this.onDidChangeSessions = this.onDidChangeEmitter.event
-    this.onDidChangeSessions(this.updatePersistentSessions)
-    this.loadPersistentSessions()
+    this.onDidChangeEmitter=  new vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>();
+    this.onDidChangeSessions = this.onDidChangeEmitter.event;
+    this.onDidChangeSessions(this.updatePersistentSessions);
+    this.loadPersistentSessions();
   }
 
   registerIntegration(newIntegration: IFireIntegration) {
@@ -22,7 +34,7 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
 
   async signIn(email: string, password: string, scope: string) {
 
-    const newSession = await this.integrations[scope](email, password)
+    const newSession = await this.integrations[scope](email, password);
         
     this.sessions.push(newSession);
     this.createSession(newSession.scopes);    
@@ -31,7 +43,7 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
       added: [newSession],
       removed: [],
       changed: [],
-    })
+    });
   } 
 
   getSessions(
@@ -77,14 +89,14 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
   }
 
   updatePersistentSessions(){
-    globalContext.secrets.store("sessions", JSON.stringify(this.sessions))
+    globalContext.secrets.store("sessions", JSON.stringify(this.sessions));
   }
 
   loadPersistentSessions(){
     globalContext.secrets.get("sessions")
     .then(result => {
-      this.sessions =  result ? JSON.parse(result) : []
-    })       
+      this.sessions =  result ? JSON.parse(result) : [];
+    });       
   }
 
   removeSession(sessionId: string): Thenable<void> {

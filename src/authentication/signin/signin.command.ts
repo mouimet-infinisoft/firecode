@@ -1,3 +1,15 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:33:46
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
 import * as vscode from 'vscode';
 import { fireAuthProvider, globalContext } from '../../extension';
 import { fireSignInWebView } from './signin.webview';
@@ -26,23 +38,23 @@ const signInCommand = (): Thenable<void> => new Promise((resolve, reject)=>{
           fireAuthProvider
             .signIn(message.credentials.email, message.credentials.password,"overlay")
             .then(()=>{
-              currentPanel?.dispose()
-              resolve()
+              currentPanel?.dispose();
+              resolve();
             })
             .catch((err:any) => {
               vscode.window.showErrorMessage(`Error, authentication failed!`);
-              reject()
+              reject();
             });
         },
         undefined,
         globalContext.subscriptions
       );
       
-      globalContext.subscriptions.push(currentPanel)
+      globalContext.subscriptions.push(currentPanel);
     }
-  })
+  });
 
   export const fireSignInCommand = {
       name: 'firecode.openSignIn',
       command: signInCommand
-  }
+  };
