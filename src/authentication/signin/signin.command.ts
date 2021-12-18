@@ -4,7 +4,7 @@ import { fireSignInWebView } from './signin.webview';
 
 let currentPanel: vscode.WebviewPanel;
 
-const signInCommand = () => {
+const signInCommand = (): Thenable<void> => new Promise((resolve, reject)=>{
     const columnToShowIn = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
@@ -24,10 +24,14 @@ const signInCommand = () => {
       currentPanel.webview.onDidReceiveMessage(
         (message) => {
           fireAuthProvider
-            .login(message.credentials.email, message.credentials.password)
-            .then(()=>currentPanel?.dispose())
-            .catch((err) => {
+            .signIn(message.credentials.email, message.credentials.password,"overlay")
+            .then(()=>{
+              currentPanel?.dispose()
+              resolve()
+            })
+            .catch((err:any) => {
               vscode.window.showErrorMessage(`Error, authentication failed!`);
+              reject()
             });
         },
         undefined,
@@ -36,7 +40,7 @@ const signInCommand = () => {
       
       globalContext.subscriptions.push(currentPanel)
     }
-  }
+  })
 
   export const fireSignInCommand = {
       name: 'firecode.openSignIn',

@@ -1,8 +1,8 @@
-interface IAuthenticationResult {
-    token: string
-    refresh_token:string
-}
+import { FirecodeSession } from "./provider";
 
-interface IAuthenticator {
-    login(email:string, password:string): Promise<IAuthenticationResult> | IAuthenticationResult
+export type IFireSignIn = (email:string, password:string)=> Promise<FirecodeSession> | FirecodeSession
+
+export interface IFireIntegration {
+    scope: string
+    signIn:IFireSignIn
 }

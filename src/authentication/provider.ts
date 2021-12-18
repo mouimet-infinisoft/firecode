@@ -1,21 +1,22 @@
-import fetch from "node-fetch";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import * as vscode from "vscode";
-import { config } from "../config/internal";
+import { globalContext } from "../extension";
+import { fireSignInCommand } from "./signin/signin.command";
+import { IFireIntegration, IFireSignIn } from "./types";
 
 export class FireAuthProvider implements vscode.AuthenticationProvider {
-  static scopes = ["default"];
   private subscribers: { [id: string]: Function };
   private sessions: FirecodeSession[];
 
-  constructor() {
+  constructor(private integrations:  { [id: string]: IFireSignIn } = {}) {
     this.subscribers = {};
     this.sessions = [];
+    this.loadPersistentSessions();
   }
 
   onDidChangeSessions: vscode.Event<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> =
     (listener) => {
-      const id = uuid();
+      const id = v4();
       this.subscribers[id] = listener;
 
       return {
@@ -25,91 +26,125 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
       };
     };
 
-  isAuthenticated() {
-    return this.sessions?.[0].isAuthenticated;
-  }
-
-  session() {
-    return this.sessions?.[0];
-  }
-
-  login(email: string, password: string) {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        console.log(`Loging in...`);
-        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // REMOVE FOR RELEASE
-
-        const response = await fetch(
-          `${config.APIURL}/${config.ROUTES.login}`,
-          {
-            method: "POST",
-            headers: {
-              // eslint-disable-next-line @typescript-eslint/naming-convention
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email, password }),
-          }
-        );
-
-        const { refresh_token, token } =
-          (await response.json()) as IAuthenticationResult;
-
-          const newSession = new FirecodeSession(
-            uuid(),
-            token,
-            refresh_token,
-            true,
-            new FirecodeAccount(uuid(), email),
-            FireAuthProvider.scopes
-          )
-        this.sessions.push(newSession);
-
-        this.createSession(FireAuthProvider.scopes);
-
+  emitOnDidChangeSessions: vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> =
+    {
+      fire: (payload) => {
         for (let subscriber in this.subscribers) {
-          this.subscribers[subscriber]({added:[newSession]});
+          this.subscribers[subscriber](payload);
         }
 
-        console.log(`Authentication Success!`);
+        this.updatePersistentSessions()
+      },
+      dispose: () => {},
+      event: this.onDidChangeSessions,
+    };
 
-        resolve();
-      } catch (error) {
-        console.error(`Error, authentication failed!`);
-        reject(`AuthenticationError`);
-      }
-    });
+  registerIntegration(newIntegration: IFireIntegration) {
+    this.integrations[newIntegration.scope] = newIntegration.signIn;
   }
+
+  async signIn(email: string, password: string, scope: string) {
+
+    const newSession = await this.integrations[scope](email, password)
+        
+    this.sessions.push(newSession);
+    this.createSession(newSession.scopes);    
+
+    this.emitOnDidChangeSessions.fire({
+      added: [newSession],
+      removed: [],
+      changed: [],
+    });
+  } 
 
   getSessions(
     scopes?: readonly string[]
   ): Thenable<readonly vscode.AuthenticationSession[]> {
+    if (scopes) {
+      Promise.resolve(this.findScopedSession(scopes) || []);
+    }
     return Promise.resolve(this.sessions);
   }
 
   createSession(
     scopes: readonly string[]
   ): Thenable<vscode.AuthenticationSession> {
-    return Promise.resolve(this.session());
+    return new Promise(async (resolve, reject) => {
+      try {
+        let result = this.findScopedSession(scopes);
+        if (result) {
+          resolve(result);         
+        } else {
+          await vscode.commands.executeCommand<void>(fireSignInCommand.name);
+          result = this.findScopedSession(scopes);
+          if (result) {
+            resolve(result);
+          }
+
+          reject(`[Firecode]: Authentication failed!`);
+        }
+      } catch (error) {
+        reject(error);
+        console.error(`[Firecode]: Error, create session failed!`);
+      }
+    });
+  }
+
+  findScopedSession(
+    scopes: readonly string[]
+  ): vscode.AuthenticationSession | undefined {
+    const joinedScopes = scopes.join(" ");
+    return this.sessions.find((session) =>
+      session.scopes.some((sessionScop) => joinedScopes.includes(sessionScop))
+    );
+  }
+
+  updatePersistentSessions(){
+    globalContext.secrets.store("sessions", JSON.stringify(this.sessions))
+  }
+
+  loadPersistentSessions(){
+    globalContext.secrets.get("sessions")
+    .then(result => {
+      this.sessions =  result ? JSON.parse(result) : []
+    })       
   }
 
   removeSession(sessionId: string): Thenable<void> {
-    this.sessions = this.sessions.filter((s) => !s.id.includes(sessionId));
+    const removed = [] as vscode.AuthenticationSession[];
+    this.sessions = this.sessions.filter((s) => {
+      if (s.id.includes(sessionId)) {
+        removed.push(s);
+      }
+      return !s.id.includes(sessionId);
+    });
+
+    this.emitOnDidChangeSessions.fire({
+      added: [],
+      removed,
+      changed: [],
+    });
     return Promise.resolve();
   }
 }
 
-class FirecodeSession implements vscode.AuthenticationSession {
+export class FirecodeSession implements vscode.AuthenticationSession {
   constructor(
     public readonly id: string,
     public readonly accessToken: string,
-    public readonly refreshToken: string,
-    public readonly isAuthenticated: boolean,
+    private readonly refreshToken: string,
     public readonly account: vscode.AuthenticationSessionAccountInformation,
     public readonly scopes: readonly string[]
   ) {}
+
+  private isTokenExpired = (token: string) =>
+    Date.now() >=
+    JSON.parse(Buffer.from(token.split(".")[1], "base64").toString()).exp *
+      1000;
+  private refreshAccessToken = () => {};
 }
 
-class FirecodeAccount
+export class FirecodeAccount
   implements vscode.AuthenticationSessionAccountInformation
 {
   constructor(public readonly id: string, public readonly label: string) {}
