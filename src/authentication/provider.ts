@@ -1,43 +1,20 @@
-import { v4 } from "uuid";
 import * as vscode from "vscode";
 import { globalContext } from "../extension";
 import { fireSignInCommand } from "./signin/signin.command";
 import { IFireIntegration, IFireSignIn } from "./types";
 
 export class FireAuthProvider implements vscode.AuthenticationProvider {
-  private subscribers: { [id: string]: Function };
   private sessions: FirecodeSession[];
+  onDidChangeEmitter:vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> 
+  onDidChangeSessions: vscode.Event<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>
 
   constructor(private integrations:  { [id: string]: IFireSignIn } = {}) {
-    this.subscribers = {};
     this.sessions = [];
-    this.loadPersistentSessions();
+    this.onDidChangeEmitter=  new vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>()
+    this.onDidChangeSessions = this.onDidChangeEmitter.event
+    this.onDidChangeSessions(this.updatePersistentSessions)
+    this.loadPersistentSessions()
   }
-
-  onDidChangeSessions: vscode.Event<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> =
-    (listener) => {
-      const id = v4();
-      this.subscribers[id] = listener;
-
-      return {
-        dispose: () => {
-          delete this.subscribers[id];
-        },
-      };
-    };
-
-  emitOnDidChangeSessions: vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent> =
-    {
-      fire: (payload) => {
-        for (let subscriber in this.subscribers) {
-          this.subscribers[subscriber](payload);
-        }
-
-        this.updatePersistentSessions()
-      },
-      dispose: () => {},
-      event: this.onDidChangeSessions,
-    };
 
   registerIntegration(newIntegration: IFireIntegration) {
     this.integrations[newIntegration.scope] = newIntegration.signIn;
@@ -50,11 +27,11 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
     this.sessions.push(newSession);
     this.createSession(newSession.scopes);    
 
-    this.emitOnDidChangeSessions.fire({
+    this.onDidChangeEmitter.fire({
       added: [newSession],
       removed: [],
       changed: [],
-    });
+    })
   } 
 
   getSessions(
@@ -119,7 +96,7 @@ export class FireAuthProvider implements vscode.AuthenticationProvider {
       return !s.id.includes(sessionId);
     });
 
-    this.emitOnDidChangeSessions.fire({
+    this.onDidChangeEmitter.fire({
       added: [],
       removed,
       changed: [],

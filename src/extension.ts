@@ -2,7 +2,10 @@ import * as vscode from "vscode";
 import { fireIntegrationOverlay } from "./authentication/integrations/overlay";
 import { FireAuthProvider } from "./authentication/provider";
 import { fireSignInCommand } from "./authentication/signin/signin.command";
+import { LOGLEVEL, LogProvider } from "./logger/private";
+import { fireLogWriter } from "./logger/writers/console";
 
+const fireLogProvider = new LogProvider([fireLogWriter], LOGLEVEL.DEBUG);
 export let fireAuthProvider: FireAuthProvider;
 export let globalContext: vscode.ExtensionContext;
 
@@ -17,7 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
     [fireIntegrationOverlay.scope]: fireIntegrationOverlay.signIn,
   });
 
-  console.log("Firecode activated!");
+  fireLogProvider.info("Firecode activated!");
+  fireLogProvider.debug("TESTING DEBUG");
 
   /**
    *
@@ -58,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
             .getSession("Infinisoft", [fireIntegrationOverlay.scope])
             .then((r) => {
               if (r) {
-                console.log(r);
+                fireLogProvider.info(`firecode.dev.getSession(): Got Session`)
                 vscode.window.showInformationMessage("Got session!");
               } else {
                 vscode.window.showErrorMessage("No session!");
