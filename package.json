@@ -1,8 +1,11 @@
 {
-    "name": "firecode",
-    "displayName": "firecode",
+    "name": "Firecode",
+    "displayName": "Firecode",
     "description": "Turn UI/UX design into code",
     "version": "0.0.1",
+    "publisher": "Infinisoft",
+    "private": true,
+    "license": "MIT",
     "engines": {
         "vscode": "^1.63.0"
     },
@@ -12,7 +15,8 @@
     "activationEvents": [
         "onCommand:firecode.dev.getSession",
         "onCommand:firecode.dev.onChangeSession",
-        "onCommand:firecode.openSignIn"
+        "onCommand:firecode.openSignIn",
+        "onCommand:firecode.dev.test.popUp"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -27,8 +31,38 @@
             {
                 "command": "firecode.openSignIn",
                 "title": "Firecode: Sign In"
+            },
+            {
+                "command": "firecode.dev.test.popUp",
+                "title": "Firecode:Dev:Test:popUp"
             }
-        ]
+        ],
+        "views": {
+            "firecode-view": [{
+                    "id": "firecode.view.projects",
+                    "name": "Projects"
+                },
+                {
+                    "id": "firecode.view.components",
+                    "name": "Components"
+                },
+                {
+                    "id": "firecode.view.tools",
+                    "name": "Tools"
+                }
+            ],
+            "explorer": [{
+                "id": "firecode.view.explorer",
+                "name": "Firecode"
+            }]
+        },
+        "viewsContainers": {
+            "activitybar": [{
+                "id": "firecode-view",
+                "title": "Firecode",
+                "icon": "resources/LogoFirecode.svg"
+            }]
+        }
     },
     "scripts": {
         "vscode:prepublish": "yarn run package",

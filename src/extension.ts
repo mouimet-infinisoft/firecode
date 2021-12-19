@@ -4,10 +4,13 @@ import { FireAuthProvider } from "./authentication/provider";
 import { fireSignInCommand } from "./authentication/signin/signin.command";
 import { LOGLEVEL, LogProvider } from "./logger/private";
 import { fireLogWriter } from "./logger/writers/console";
+import { FireToolsTreeProvider } from "./tools/treeview/provider";
 
 const fireLogProvider = new LogProvider([fireLogWriter], LOGLEVEL.DEBUG);
 export let fireAuthProvider: FireAuthProvider;
+const fireToolsTreeProvider = new FireToolsTreeProvider()
 export let globalContext: vscode.ExtensionContext;
+export let fireStatusBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
   /**
@@ -21,7 +24,6 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   fireLogProvider.info("Firecode activated!");
-  fireLogProvider.debug("TESTING DEBUG");
 
   /**
    *
@@ -35,7 +37,8 @@ export function activate(context: vscode.ExtensionContext) {
       fireAuthProvider
     )
   );
-  6;
+
+  context.subscriptions.push(vscode.window.registerTreeDataProvider('firecode.view.tools', fireToolsTreeProvider))
 
   /***
    *
@@ -87,7 +90,26 @@ export function activate(context: vscode.ExtensionContext) {
         );
       })
     );
+    const devTestPopup = vscode.commands.registerCommand("firecode.dev.test.popUp", () => {
+      vscode.window.showInformationMessage(
+        `[Firecode]: firecode.dev.test.popUp(): Test!`
+      );
+    })
+    context.subscriptions.push(devTestPopup);
+
+  /***
+   * 
+   * Status bar DEV TEXT
+   * 
+   */
+
+   fireStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
+   fireStatusBarItem.command = "firecode.dev.test.popUp";
+   fireStatusBarItem.text = "$(accounts-view-bar-icon) Firecode"
+   fireStatusBarItem.show()
+   context.subscriptions.push(fireStatusBarItem);
   }
+  
 }
 
 export function deactivate() {}
