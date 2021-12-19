@@ -1,3 +1,15 @@
+/**
+    * @description      : 
+    * @author           : milie
+    * @group            : 
+    * @created          : 18/12/2021 - 18:34:04
+    * 
+    * MODIFICATION LOG
+    * - Version         : 1.0.0
+    * - Date            : 18/12/2021
+    * - Author          : milie
+    * - Modification    : 
+**/
 export const fireSignInWebView = () => `<!DOCTYPE html>
 <html>
 
@@ -225,4 +237,4 @@ export const fireSignInWebView = () => `<!DOCTYPE html>
 </body>
 
 </html>
-`
+`;
