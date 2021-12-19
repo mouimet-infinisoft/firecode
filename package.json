@@ -13,10 +13,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:firecode.dev.getSession",
-        "onCommand:firecode.dev.onChangeSession",
-        "onCommand:firecode.openSignIn",
-        "onCommand:firecode.dev.test.popUp"
+        "onStartupFinished"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -37,6 +34,16 @@
                 "title": "Firecode:Dev:Test:popUp"
             }
         ],
+        "menus": {
+            "view/title": [{
+                "command": "firecode.dev.test.popUp",
+                "when": "view == 'firecode.view.projects'"
+            }],
+            "view/item/context": [{
+                "command": "firecode.dev.test.popUp",
+                "when": "view == firecode.view.tools"
+            }]
+        },
         "views": {
             "firecode-view": [{
                     "id": "firecode.view.projects",

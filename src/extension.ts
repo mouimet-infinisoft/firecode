@@ -16,9 +16,10 @@ import { FireAuthProvider } from "./authentication/provider";
 import { fireSignInCommand } from "./authentication/signin/signin.command";
 import { LOGLEVEL, LogProvider } from "./logger/private";
 import { fireLogWriter } from "./logger/writers/console";
+import { vsCodeLogWriter } from "./logger/writers/workspace";
 import { FireToolsTreeProvider } from "./tools/treeview/provider";
 
-const fireLogProvider = new LogProvider([fireLogWriter], LOGLEVEL.DEBUG);
+export const fireLogProvider = new LogProvider([fireLogWriter, vsCodeLogWriter], LOGLEVEL.DEBUG);
 export let fireAuthProvider: FireAuthProvider;
 const fireToolsTreeProvider = new FireToolsTreeProvider()
 export let globalContext: vscode.ExtensionContext;
@@ -103,6 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
       })
     );
     const devTestPopup = vscode.commands.registerCommand("firecode.dev.test.popUp", () => {
+      fireLogProvider.error(`firecode.dev.test.popUp`);
       vscode.window.showInformationMessage(
         `[Firecode]: firecode.dev.test.popUp(): Test!`
       );

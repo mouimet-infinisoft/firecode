@@ -1,4 +1,3 @@
-import path = require("path");
 import * as vscode from "vscode";
 
 enum TreeNodeType {
@@ -37,12 +36,14 @@ interface ITreeNode extends vscode.TreeItem {
     children: ITreeNode[];
   }
 
-class TreeNode implements ITreeNode {
+class TreeNode extends vscode.TreeItem implements ITreeNode  {
     constructor(public readonly id: string,
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly type: TreeNodeType,
-        public readonly children: ITreeNode[]){}
+        public readonly children: ITreeNode[]){
+            super(label,collapsibleState)
+        }
 
     command?: vscode.Command | undefined;
     // iconPath?: string | vscode.Uri | { light: string | vscode.Uri; dark: string | vscode.Uri; } | vscode.ThemeIcon | undefined;
@@ -52,9 +53,4 @@ class TreeNode implements ITreeNode {
     contextValue?: string | undefined;
     accessibilityInformation?: vscode.AccessibilityInformation | undefined;
 
-    iconPath = {
-        light: path.join(__filename, '..', '..', '..', 'resources', 'light', 'LogoFirecode.svg'),
-        dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', 'LogoFirecode.svg')
-      };
-    
 }
