@@ -1,0 +1,136 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <div id="root"></div>
+    <div id="label">
+        <h1>POC</h1>
+    </div>
+
+    <div id="firecodeIde" style="display: flex">
+        <div id="treePanel" style="width: 15%; height: 800px; border: 1px black solid">
+            <h2>Components</h2>
+            <div id="componentListContainer"></div>
+        </div>
+        <div id="canvasPanel" style="
+          width: 70%;
+          height: 800px;
+          border: 1px red solid;
+          overflow: hidden;
+        ">
+            <h2>Canvas</h2>
+            <div id="canvasContainer"></div>
+        </div>
+
+        <div id="codePanel" style="
+          width: 15%;
+          height: 800px;
+          border: 1px black solid;
+          display: flex;
+          flex-direction: column;
+        ">
+            <div style="flex: 1 1 auto; height: 50%">
+                <h1>Code</h1>
+                <button onclick="saveCode()">Generate Code</button>
+                <textarea id="codeContainer" style="width: 95%; height: 80%"></textarea>
+            </div>
+
+            <div style="flex: 1 1 auto; height: 50%">
+                <h1>Style</h1>
+                <textarea id="styleContainer" style="width: 95%; height: 80%"></textarea>
+            </div>
+        </div>
+    </div>
+    <!-- <script src="./treePanel.js" type="text/javascript"></script>
+    <script src="./generateCode.js" type="text/javascript"></script> -->
+
+    <script>
+        window.addEventListener("message", (event) => {
+            const message = event.data; // The JSON data our extension sent
+            console.log(message);
+
+            switch (message.command) {
+                case "replaceLabel":
+                    const el = document.getElementById("label");
+                    el.textContent = message.data;
+                    document.body.appendChild(el);
+                    break;
+                case "loadJs":
+                    var _script = document.createElement("script");
+                    _script.type = "text/javascript";
+                    _script.src = message.data;
+                    document.body.appendChild(_script);
+                    break;
+                case "loadtree":
+                    loadTree(JSON.parse(message.data));
+                    break;
+                case "codeUpdate":
+                    const codeContainer = document.getElementById("codeContainer");
+                    const styleContainer = document.getElementById("styleContainer");
+                    const result = generateCode();
+                    codeContainer.textContent = mockCanvasCode(result.reactCode.imports, result.reactCode.code);
+                    styleContainer.textContent = result.style;
+                    break;
+            }
+        });
+
+        const mockReactCode = (_componentName) => `
+      import React from "react";
+
+      export const ${_componentName} = () => {
+        return (
+          <button>
+            <p>Primary</p>
+          </button>
+        );
+      };`;
+
+        const mockCanvasCode = (innerImports, innerCode) => `${innerImports}
+        
+export const Canvas = () => {
+return (<div id="canvasContainer">${innerCode}</div>)
+}`;
+
+        function randomId(prefix) {
+            return `${prefix}-${Math.ceil(Math.random() * 87986576)}`;
+        }
+
+        window.postMessage({
+            command: "codeUpdate",
+            data: mockCanvasCode(),
+        });
+
+        window.postMessage({
+            command: "loadtree",
+            data: [{
+                id: randomId("ButtonTestPrimary"),
+                name: "ButtonTestPrimary",
+                reactCode: mockReactCode("ButtonTestPrimary"),
+                style: "",
+            }, {
+                id: randomId("Component2"),
+                name: "Component2",
+                reactCode: mockReactCode("Component2"),
+                style: "",
+            }, {
+                id: randomId("Component3"),
+                name: "Component3",
+                reactCode: mockReactCode("Component3"),
+                style: "",
+            }, {
+                id: randomId("Component4"),
+                name: "Component4",
+                reactCode: mockReactCode("Component4"),
+                style: "",
+            }, ],
+        });
+    </script>
+</body>
+
+</html>

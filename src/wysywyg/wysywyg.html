@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <div id="root"></div>
+    <div id="label">YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>
+
+    <div id="firecodeIde" style="display: flex">
+        <div id="treePanel" style="width: 15%; height: 800px; border: 1px black solid">
+            <h1>Components</h1>
+            <div id="componentListContainer"></div>
+        </div>
+        <div id="canvasPanel" style="
+          width: 70%;
+          height: 800px;
+          border: 1px red solid;
+          overflow: hidden;
+        ">
+            <h1>Canvas</h1>
+            <div id="canvasContainer"></div>
+        </div>
+
+        <div id="codePanel" style="width: 15%; height: 800px; border: 1px black solid">
+            <h1>Code</h1>
+            <div id="codeContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const _list = document.getElementById("componentListContainer");
+        const _canvas = document.getElementById("canvasContainer");
+
+        function elementTreeNode(_element) {
+            _element.addEventListener("click", (event) => {
+                const newElement = event.target.cloneNode(true);
+                newElement.dataset.componentId = newElement.dataset.id
+                newElement.dataset.id = randomId(`instance`)
+                newElement.textContent = `NEW ${newElement.textContent}`;
+                _canvas.appendChild(elementHOC(newElement));
+            });
+
+            return _element;
+        }
+
+        function elementHOC(_element) {
+            _element.addEventListener("mousedown", function(event) {
+                var _target = _element;
+                let shiftX = event.clientX - _target.getBoundingClientRect().left;
+                let shiftY = event.clientY - _target.getBoundingClientRect().top;
+
+                _target.style.position = "absolute";
+                _target.style.zIndex = 1000;
+                _canvas.append(_target);
+
+                moveAt(event.pageX, event.pageY);
+
+                // moves the ball at (pageX, pageY) coordinates
+                // taking initial shifts into account
+                function moveAt(pageX, pageY) {
+                    _target.style.left = pageX - shiftX + "px";
+                    _target.style.top = pageY - shiftY + "px";
+                }
+
+                function onMouseMove(event) {
+                    moveAt(event.pageX, event.pageY);
+                }
+
+                // move the ball on mousemove
+                _target.addEventListener("mousemove", onMouseMove);
+
+                // drop the ball, remove unneeded handlers
+                _target.addEventListener("mouseup", function() {
+                    _target.removeEventListener("mousemove", onMouseMove);
+                    _target.onmouseup = null;
+                });
+            });
+
+            _element.addEventListener("dragstart", function() {
+                return false;
+            });
+
+            return _element;
+        }
+
+        window.addEventListener("message", (event) => {
+            const message = event.data; // The JSON data our extension sent
+            console.log(message);
+
+            switch (message.command) {
+                case "replaceLabel":
+                    const el = document.getElementById("label");
+                    el.textContent = message.data;
+                    document.body.appendChild(el);
+                    break;
+                case "loadJs":
+                    var _script = document.createElement("script");
+                    _script.type = "text/javascript";
+                    _script.src = message.data;
+                    document.body.appendChild(_script);
+                    break;
+                case "loadtree":
+                    const treePanel = document.getElementById("treePanel");
+                    const container = document.getElementById("componentListContainer");
+
+                    for (let i = 0; i < message.data.length; i++) {
+                        const el = message.data[i];
+
+                        var x = document.createElement("div");
+                        x.style.height = "40px";
+                        x.style.width = "100px";
+                        x.style.padding = "1rem";
+                        x.style.margin = "8px";
+                        x.style.backgroundColor = "grey";
+                        x.dataset.id = el.id;
+                        x.dataset.reactCode = el.reactCode;
+                        var t = document.createTextNode(el.name);
+                        x.appendChild(t);
+                        container.appendChild(elementTreeNode(x));
+                    }
+                    break;
+                case "codeUpdate":
+                    const codeContainer = document.getElementById("codeContainer");
+                    codeContainer.textContent = mockCanvasCode();
+                    break;
+            }
+        });
+
+        const mockReactCode = `
+import React from "react";
+import styles from "./ButtonTestPrimary.module.scss";
+
+const ButtonTestPrimary = () => {
+  return (
+    <button className={styles.buttonTestPrimary}>
+      <p className={styles.primary}>Primary</p>
+    </button>
+  );
+};
+
+export default ButtonTestPrimary;
+`;
+
+        const mockCanvasCode = (innerCode) => `
+<div id="canvasContainer">${innerCode}</div>
+`;
+
+        function randomId(suffix) {
+            return `${Math.ceil(Math.random() * 87986576)}-${suffix}`;
+        }
+
+        window.postMessage({
+            command: "codeUpdate",
+            data: mockCanvasCode(),
+        });
+
+        window.postMessage({
+            command: "loadtree",
+            data: [{
+                id: randomId("1"),
+                name: "ButtonTestPrimary",
+                reactCode: mockReactCode,
+            }, {
+                id: randomId("2"),
+                name: "Component2",
+                reactCode: mockReactCode,
+            }, {
+                id: randomId("3"),
+                name: "Component3",
+                reactCode: mockReactCode,
+            }, {
+                id: randomId("4"),
+                name: "Component4",
+                reactCode: mockReactCode,
+            }, ],
+        });
+    </script>
+</body>
+
+</html>

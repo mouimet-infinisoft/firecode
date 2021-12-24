@@ -10,27 +10,25 @@
     * - Author          : milie
     * - Modification    : 
 **/
+import path = require("path");
 import * as vscode from "vscode";
 import { fireIntegrationOverlay } from "./authentication/integrations/overlay";
 import { FireAuthProvider } from "./authentication/provider";
 import { fireSignInCommand } from "./authentication/signin/signin.command";
 import { LOGLEVEL, LogProvider } from "./logger/private";
 import { fireLogWriter } from "./logger/writers/console";
-import { vsCodeLogWriter } from "./logger/writers/workspace";
 import { FireToolsTreeProvider } from "./tools/treeview/provider";
+import { fireMouseMoveCommand } from "./wysywyg/mousemove.command";
 
-export const fireLogProvider = new LogProvider([fireLogWriter, vsCodeLogWriter], LOGLEVEL.DEBUG);
+// export const fireLogProvider = new LogProvider([fireLogWriter, vsCodeLogWriter], LOGLEVEL.DEBUG);
+export const fireLogProvider = new LogProvider([fireLogWriter], LOGLEVEL.DEBUG);
 export let fireAuthProvider: FireAuthProvider;
 const fireToolsTreeProvider = new FireToolsTreeProvider()
 export let globalContext: vscode.ExtensionContext;
 export let fireStatusBarItem: vscode.StatusBarItem;
 
 export function activate(context: vscode.ExtensionContext) {
-  /**
-   *
-   * Initialization
-   *
-   */
+
   globalContext = context;
   fireAuthProvider = new FireAuthProvider({
     [fireIntegrationOverlay.scope]: fireIntegrationOverlay.signIn,
@@ -105,11 +103,19 @@ export function activate(context: vscode.ExtensionContext) {
     );
     const devTestPopup = vscode.commands.registerCommand("firecode.dev.test.popUp", () => {
       fireLogProvider.error(`firecode.dev.test.popUp`);
+
       vscode.window.showInformationMessage(
         `[Firecode]: firecode.dev.test.popUp(): Test!`
       );
     })
     context.subscriptions.push(devTestPopup);
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        fireMouseMoveCommand.name,
+        fireMouseMoveCommand.command
+      )
+    );
 
   /***
    * 

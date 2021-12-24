@@ -1,0 +1,43 @@
+<html>
+
+<head> </head>
+
+<body>
+    <h1>WYSYWYG Tests</h1>
+
+    <script>
+        function dragstart_handler(ev) {
+            // Add the target element's id to the data transfer object
+            ev.dataTransfer.setData("application/my-app", ev.target.id);
+            ev.dataTransfer.effectAllowed = "copy";
+        }
+
+        function dragover_handler(ev) {
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = "copy";
+        }
+
+        function drop_handler(ev) {
+            ev.preventDefault();
+            // Get the id of the target and add the moved element to the target's DOM
+            const data = ev.dataTransfer.getData("application/my-app");
+            ev.target.appendChild(document.getElementById(data));
+        }
+    </script>
+
+
+
+    <div style="display: flex; width: 95vw; height: 800px; border: 1px black solid">
+        <div style="flex: 1 1 15%; height: 100%; border: 1px blue solid">
+            <div style="height: 100px; width: 100px; background-color: red" id="p1" draggable="true" ondragstart="dragstart_handler(event)">
+                This element is draggable.
+            </div>
+        </div>
+
+        <div style="flex: 2 1 85%; height: 100%; border: 1px red solid" id="target" ondrop="drop_handler(event)" ondragover="dragover_handler(event)">
+            Toolbar
+        </div>
+    </div>
+</body>
+
+</html>
